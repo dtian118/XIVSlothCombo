@@ -6,3 +6,5 @@ XIVSlothCombo/obj/
 XIVSlothCombo/bin/Debug/
 
 *.v2
+
+.history/

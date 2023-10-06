@@ -296,18 +296,49 @@ namespace XIVSlothCombo.Combos.PvE
 
             protected override uint Invoke(uint actionID, uint lastComboMove, float comboTime, byte level)
             {
-                if (actionID == Bootshine)
+                if (actionID == All.LegSweep)
                 {
+                    var canWeave = CanWeave(Bootshine, 0.5);
+                    var canDelayedWeave = CanWeave(Bootshine, 0.0) && GetCooldown(Bootshine).CooldownRemaining < 0.7;
+                    var demolishDuration = GetDebuffRemainingTime(Debuffs.Demolish);
+                    var twinsnakeDuration = GetBuffRemainingTime(Buffs.DisciplinedFist);
+                    var gauge = GetJobGauge<MNKGauge>();
+
+                    if (canWeave)
+                    {
+                        if (gauge.Chakra == 5 && HasEffect(Buffs.DisciplinedFist))
+                        {
+                            if (GetCooldownRemainingTime(RiddleOfFire) >= 1.5 && IsOnCooldown(RiddleOfFire) && lastComboMove != RiddleOfFire)
+                            {
+                                return OriginalHook(Meditation);
+                            }
+                        }
+                    }
+
+                    if (canDelayedWeave)
+                    {
+                        if (TargetNeedsPositionals() && LevelChecked(All.TrueNorth) && GetRemainingCharges(All.TrueNorth) > 0 && !HasEffect(All.Buffs.TrueNorth) && LevelChecked(Demolish) && HasEffect(Buffs.CoerlForm))
+                        {
+                            if (!TargetHasEffect(Debuffs.Demolish) || demolishDuration <= PluginConfiguration.GetCustomFloatValue(Config.MNK_Demolish_Apply))
+                            {
+                                if (!OnTargetsRear())
+                                    return All.TrueNorth;
+                            }
+                            else if (!OnTargetsFlank())
+                                return All.TrueNorth;
+                        }
+                    }
+
                     if (HasEffect(Buffs.RaptorForm) && level >= Levels.TrueStrike)
                     {
-                        if (!HasEffect(Buffs.DisciplinedFist) && level >= Levels.TwinSnakes)
+                        if ((!HasEffect(Buffs.DisciplinedFist) || twinsnakeDuration < 5.8) && level >= Levels.TwinSnakes)
                             return TwinSnakes;
                         return TrueStrike;
                     }
 
                     if (HasEffect(Buffs.CoerlForm) && level >= Levels.SnapPunch)
                     {
-                        if (!TargetHasEffect(Debuffs.Demolish) && level >= Levels.Demolish)
+                        if ((!TargetHasEffect(Debuffs.Demolish) || demolishDuration<5.8) && level >= Levels.Demolish)
                             return Demolish;
                         return SnapPunch;
                     }
@@ -357,6 +388,8 @@ namespace XIVSlothCombo.Combos.PvE
                     var pbStacks = FindEffectAny(Buffs.PerfectBalance);
                     var lunarNadi = gauge.Nadi == Nadi.LUNAR;
                     var solarNadi = gauge.Nadi == Nadi.SOLAR;
+                    var nadiNONE = gauge.Nadi == Nadi.NONE;
+                    var PhantomR = !lunarNadi && !solarNadi && !nadiNONE;
 
                     if (IsEnabled(CustomComboPreset.MNK_Variant_Cure) && IsEnabled(Variant.VariantCure) && PlayerHealthPercentageHp() <= GetOptionValue(Config.MNK_VariantCure))
                         return Variant.VariantCure;
@@ -398,6 +431,11 @@ namespace XIVSlothCombo.Combos.PvE
                                     inOpener = false;
                                     openerFinished = true;
                                 }
+
+                                //if ((lastComboMove == RisingPhoenix || lastComboMove == ElixirField) && (twinsnakeDuration < 10 || !HasEffect(Buffs.DisciplinedFist)))
+                                //{
+                                //    return TwinSnakes;
+                                //}
 
                                 // Delayed weave for Riddle of Fire specifically
                                 if (canDelayedWeave)
@@ -483,6 +521,11 @@ namespace XIVSlothCombo.Combos.PvE
                             canWeave)
                             return Variant.VariantRampart;
 
+                        //if ((lastComboMove == RisingPhoenix || lastComboMove == ElixirField) && (twinsnakeDuration < 10 || !HasEffect(Buffs.DisciplinedFist)))
+                        //{
+                        //    return TwinSnakes;
+                        //}
+
                         if (IsEnabled(CustomComboPreset.MNK_ST_Simple_CDs))
                         {
                             if (canWeave)
@@ -492,6 +535,7 @@ namespace XIVSlothCombo.Combos.PvE
                                     level >= Levels.PerfectBalance && !HasEffect(Buffs.PerfectBalance) && HasEffect(Buffs.DisciplinedFist) &&
                                     OriginalHook(MasterfulBlitz) == MasterfulBlitz)
                                 {
+                                    
                                     // Use Perfect Balance if:
                                     // 1. It's after Bootshine/Dragon Kick.
                                     // 2. At max stacks / before overcap.
@@ -515,7 +559,11 @@ namespace XIVSlothCombo.Combos.PvE
                             {
                                 if (level >= Levels.RiddleOfFire && !IsOnCooldown(RiddleOfFire) && HasEffect(Buffs.DisciplinedFist))
                                 {
-                                    return RiddleOfFire;
+                                    if(GetCooldown(actionID).CooldownRemaining > 0.5)
+                                    {
+                                        return RiddleOfFire;
+                                    }
+                                    
                                 }
 
                                 if (TargetNeedsPositionals() && IsEnabled(CustomComboPreset.MNK_TrueNorthDynamic) && LevelChecked(All.TrueNorth) && GetRemainingCharges(All.TrueNorth) > 0 && !HasEffect(All.Buffs.TrueNorth) && LevelChecked(Demolish) && HasEffect(Buffs.CoerlForm))
@@ -602,13 +650,14 @@ namespace XIVSlothCombo.Combos.PvE
                         }
                         if (canSolar && (lunarNadi || !solarNadi))
                         {
-                            if (!raptorChakra && (!HasEffect(Buffs.DisciplinedFist) || twinsnakeDuration <= 2.5))
-                            {
-                                return TwinSnakes;
-                            }
                             if (!coeurlChakra && (!TargetHasEffect(Debuffs.Demolish) || demolishDuration <= 2.5))
                             {
                                 return Demolish;
+                            }
+
+                            if (!raptorChakra && (!HasEffect(Buffs.DisciplinedFist) || twinsnakeDuration <= 2.5))
+                            {
+                                return TwinSnakes;
                             }
                         }
                         return HasEffect(Buffs.LeadenFist) ? Bootshine : DragonKick;
@@ -622,6 +671,13 @@ namespace XIVSlothCombo.Combos.PvE
 
                     if (!HasEffect(Buffs.PerfectBalance))
                     {
+                        //if (HasEffect(Buffs.FormlessFist))
+                        //{
+                        //    if (PhantomR && (twinsnakeDuration < 10 || !HasEffect(Buffs.DisciplinedFist)))
+                        //    {
+                        //        return TwinSnakes;
+                        //    }
+                        //}
                         if (HasEffect(Buffs.FormlessFist) || HasEffect(Buffs.OpoOpoForm))
                         {
                             return !LevelChecked(DragonKick) || HasEffect(Buffs.LeadenFist)

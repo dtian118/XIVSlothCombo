@@ -1645,8 +1645,9 @@ namespace XIVSlothCombo.Combos
         [CustomComboInfo("Twin Snakes Feature", "Replaces True Strike with Twin Snakes if Disciplined Fist is not applied or is less than 6 seconds from falling off.", MNK.JobID, 0, "", "")]
         MNK_TwinSnakes = 9011,
 
-        [ReplaceSkill(MNK.Bootshine)]
-        [ConflictingCombos(MNK_ST_SimpleMode)]
+        //[ReplaceSkill(MNK.Bootshine)]
+        [ReplaceSkill(All.LegSweep)]
+        // [ConflictingCombos(MNK_ST_SimpleMode)]
         [CustomComboInfo("Basic Rotation", "Basic Monk Combo on one button", MNK.JobID, 0, "", "")]
         MNK_BasicCombo = 9002,
 
@@ -1663,7 +1664,7 @@ namespace XIVSlothCombo.Combos
         MNK_HowlingFistMeditation = 9005,
 
         [ReplaceSkill(MNK.Bootshine)]
-        [ConflictingCombos(MNK_BasicCombo)]
+        //[ConflictingCombos(MNK_BasicCombo)]
         [CustomComboInfo("Bootshine Combo", "Replace Bootshine with its combo chain. \nIf all sub options are selected will turn into a full one button rotation (Simple Monk). Slider values can be used to control Disciplined Fist + Demolish uptime.", MNK.JobID, -2, "", "")]
         MNK_ST_SimpleMode = 9006,
 
